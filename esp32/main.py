@@ -4,7 +4,7 @@ import sys
 from machine import Pin
 
 # --- CONFIGURABLE LED PIN LIST (order matters: G0, G1, Y0, Y1, R0, R1) ---
-LED_PINS = [16, 17, 18, 19, 21, 22]
+LED_PINS = [2, 4, 5, 18, 19, 23]
 
 # Thresholds (percentages) - adjust if you want different ranges
 LOW_MAX = 33      # 0 - 33%  -> 2 green LEDs
