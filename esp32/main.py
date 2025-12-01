@@ -1,15 +1,41 @@
-# main.py - ESP32 Visual System Resource Usage Monitor
+# main.py - ESP32 Visual RAM/CPU Usage Monitor with half-steps
+# Runs on ESP32 with MicroPython
 
 import sys
 from machine import Pin
 
-# --- CONFIGURABLE LED PIN LIST (order matters: G0, G1, Y0, Y1, R0, R1) ---
+# LED order: [G0, G1, Y0, Y1, R0, R1]
+# Make sure your wiring matches these pins.
 LED_PINS = [2, 4, 5, 18, 19, 23]
 
-# Thresholds (percentages) - adjust if you want different ranges
-LOW_MAX = 33      # 0 - 33%  -> 2 green LEDs
-MED_MAX = 66      # 34 - 66% -> 2 green + 2 yellow
-# 67 - 100%       -> all 6 LEDs
+# Percentage ranges for how many LEDs to light.
+# You can adjust these if you want different breakpoints.
+def leds_for_percent(percent):
+    """
+    Map usage percentage to a number of LEDs (0–6).
+
+    0%          -> 0 LEDs (all off)
+    1–10%       -> 1 LED   (1 green)
+    11–30%      -> 2 LEDs  (2 green)
+    31–50%      -> 3 LEDs  (2 green + 1 yellow)
+    51–70%      -> 4 LEDs  (2 green + 2 yellow)
+    71–90%      -> 5 LEDs  (2 green + 2 yellow + 1 red)
+    91–100%     -> 6 LEDs  (all: 2 green + 2 yellow + 2 red)
+    """
+    if percent <= 0:
+        return 0
+    elif percent <= 10:
+        return 1
+    elif percent <= 30:
+        return 2
+    elif percent <= 50:
+        return 3
+    elif percent <= 70:
+        return 4
+    elif percent <= 90:
+        return 5
+    else:
+        return 6
 
 # --- INITIALIZE LED OBJECTS ---
 leds = [Pin(pin_num, Pin.OUT) for pin_num in LED_PINS]
@@ -21,13 +47,9 @@ def clear_leds():
 
 def set_usage_level(percent):
     """
-    Light LEDs based on usage percentage.
-    0%      -> all OFF
-    1-33%   -> 2 green
-    34-66%  -> 2 green + 2 yellow
-    67-100% -> all 6 (green + yellow + red)
+    Light LEDs based on usage percentage using the half-step scheme.
     """
-    # clamp to 0-100
+    # clamp to 0–100
     if percent < 0:
         percent = 0
     if percent > 100:
@@ -35,16 +57,7 @@ def set_usage_level(percent):
 
     clear_leds()
 
-    if percent == 0:
-        return  # leave everything off
-
-    # Decide how many LEDs to light
-    if percent <= LOW_MAX:
-        count = 2   # green only
-    elif percent <= MED_MAX:
-        count = 4   # green + yellow
-    else:
-        count = 6   # all
+    count = leds_for_percent(percent)
 
     for i in range(count):
         leds[i].value(1)
@@ -81,7 +94,7 @@ def parse_line(line):
 clear_leds()
 
 while True:
-    # read one line from USB serial (this is blocking)
+    # read one line from USB serial (blocking)
     line = sys.stdin.readline()
 
     if not line:
