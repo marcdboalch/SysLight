@@ -8,4 +8,7 @@ The ESP32 receives the percentage and lights the LEDs based on the usage level:
 - Yellow LEDs indicate medium usage
 - Red LEDs indicate high usage
 
-The host Python script can also be switched to display CPU usage instead of RAM usage by changing one configuration line. 
+A button added to the circuit along with a Blue and White LED allow for 
+switching between CPU and RAM usage.
+
+Blue for CPU and White for RAM.
